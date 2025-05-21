@@ -64,37 +64,37 @@ class ApiClient:
         return self._make_request('post', '/courses/categories/', data=data)
     
     # Course endpoints
-    def get_courses(self, category_id=None, is_active=None):
+    def get_courses(self, category=None, is_active=None):
         """Get all courses with optional filtering"""
         params = {}
-        if category_id:
-            params['category_id'] = category_id
+        if category:
+            params['category'] = category
         if is_active is not None:
             params['is_active'] = is_active
         return self._make_request('get', '/courses/courses/', params=params)
     
-    def get_course(self, course_id):
+    def get_course(self, course):
         """Get a specific course by ID"""
-        return self._make_request('get', f'/courses/courses/{course_id}/')
+        return self._make_request('get', f'/courses/courses/{course}/')
     
     def create_course(self, data):
         """Create a new course"""
         return self._make_request('post', '/courses/courses/', data=data)
     
-    def update_course(self, course_id, data):
+    def update_course(self, course, data):
         """Update an existing course"""
-        return self._make_request('put', f'/courses/courses/{course_id}/', data=data)
+        return self._make_request('put', f'/courses/courses/{course}/', data=data)
     
-    def delete_course(self, course_id):
+    def delete_course(self, course):
         """Delete a course"""
-        return self._make_request('delete', f'/courses/courses/{course_id}/')
+        return self._make_request('delete', f'/courses/courses/{course}/')
     
     # Lesson endpoints
-    def get_lessons(self, course_id=None):
-        """Get lessons, optionally filtered by course_id"""
+    def get_lessons(self, course=None):
+        """Get lessons, optionally filtered by course"""
         params = {}
-        if course_id:
-            params['course_id'] = course_id
+        if course:
+            params['course'] = course
         return self._make_request('get', '/courses/lessons/', params=params)
     
     def create_lesson(self, data):
@@ -102,11 +102,11 @@ class ApiClient:
         return self._make_request('post', '/courses/lessons/', data=data)
     
     # Material endpoints
-    def get_materials(self, course_id=None):
-        """Get materials, optionally filtered by course_id"""
+    def get_materials(self, course=None):
+        """Get materials, optionally filtered by course"""
         params = {}
-        if course_id:
-            params['course_id'] = course_id
+        if course:
+            params['course'] = course
         return self._make_request('get', '/courses/materials/', params=params)
     
     def create_material(self, data):
@@ -114,13 +114,13 @@ class ApiClient:
         return self._make_request('post', '/courses/materials/', data=data)
     
     # Enrollment endpoints
-    def get_enrollments(self, student_id=None, course_id=None):
-        """Get enrollments, optionally filtered by student_id or course_id"""
+    def get_enrollments(self, student=None, course=None):
+        """Get enrollments, optionally filtered by student or course"""
         params = {}
-        if student_id:
-            params['student_id'] = student_id
-        if course_id:
-            params['course_id'] = course_id
+        if student:
+            params['student'] = student
+        if course:
+            params['course'] = course
         return self._make_request('get', '/courses/enrollments/', params=params)
     
     def create_enrollment(self, data):
@@ -132,13 +132,13 @@ class ApiClient:
         return self._make_request('put', f'/courses/enrollments/{enrollment_id}/', data=data)
     
     # Question/Answer endpoints
-    def get_questions(self, lesson_id=None, user_id=None):
-        """Get questions, optionally filtered by lesson_id or user_id"""
+    def get_questions(self, lesson=None, user=None):
+        """Get questions, optionally filtered by lesson or user"""
         params = {}
-        if lesson_id:
-            params['lesson_id'] = lesson_id
-        if user_id:
-            params['user_id'] = user_id
+        if lesson:
+            params['lesson'] = lesson
+        if user:
+            params['user'] = user
         return self._make_request('get', '/courses/questions/', params=params)
     
     def create_question(self, data):

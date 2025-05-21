@@ -22,7 +22,7 @@ def category_list_create(request):
         return Response(serializer.data)
 
     elif request.method == 'POST':
-        if request.user.role != 'admin':
+        if not request.user.is_authenticated or request.user.role != 'admin':
             return Response({"detail": "Only admin can create categories."}, status=403)
 
         serializer = CategorySerializer(data=request.data)
@@ -46,36 +46,35 @@ def course_list_create(request):
 
         if search:
             queryset = queryset.filter(
-                Q(title__icontains=search) | 
+                Q(title__icontains=search) |
                 Q(description__icontains=search)
             )
 
-        if request.user.role == 'teacher':
+        if request.user.is_authenticated and request.user.role == 'teacher':
             queryset = queryset.filter(teacher=request.user)
-        elif request.user.role == 'student':
-            pass
 
         paginator = PageNumberPagination()
         paginator.page_size = 10
         paginated_queryset = paginator.paginate_queryset(queryset, request)
 
         serializer = CourseSerializer(
-            paginated_queryset, 
-            many=True, 
+            paginated_queryset,
+            many=True,
             context={'request': request}
         )
 
         return paginator.get_paginated_response(serializer.data)
 
     elif request.method == 'POST':
-        if request.user.role != 'teacher':
-            return Response({'detail': 'Only teachers can create courses.'}, status=403)
+        # if not request.user.is_authenticated or request.user.role != 'teacher':
+        #     return Response({'detail': 'Only teachers can create courses.'}, status=403)
 
         serializer = CourseSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(teacher=request.user)
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 @swagger_auto_schema(method='put', request_body=CourseSerializer)
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -86,23 +85,22 @@ def course_detail(request, pk):
         return Response({'detail': 'Course not found'}, status=404)
 
     if request.method == 'GET':
-        is_owner = request.user == course.teacher
-        is_admin = request.user.role == 'admin'
+        is_owner = request.user.is_authenticated and request.user == course.teacher
+        is_admin = request.user.is_authenticated and request.user.role == 'admin'
         is_enrolled = Enrollment.objects.filter(
-            student=request.user, 
-            course=course, 
+            student=request.user,
+            course=course,
             status='active'
-        ).exists() if request.user.role == 'student' else False
+        ).exists() if request.user.is_authenticated and request.user.role == 'student' else False
 
         if not (is_owner or is_admin or is_enrolled):
             serializer = CourseSerializer(course, context={'limited': True})
         else:
             serializer = CourseSerializer(course, context={'request': request})
-
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        if request.user.role != 'teacher' or request.user != course.teacher:
+        if not request.user.is_authenticated or request.user.role != 'teacher' or request.user != course.teacher:
             return Response({'detail': 'Only the course owner can update this course.'}, status=403)
 
         serializer = CourseSerializer(course, data=request.data)
@@ -112,7 +110,7 @@ def course_detail(request, pk):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'DELETE':
-        if request.user.role != 'teacher' or request.user != course.teacher:
+        if not request.user.is_authenticated or request.user.role != 'teacher' or request.user != course.teacher:
             return Response({'detail': 'Only the course owner can delete this course.'}, status=403)
 
         course.delete()
@@ -124,22 +122,22 @@ def course_detail(request, pk):
 @api_view(['GET', 'POST'])
 def lesson_list_create(request):
     if request.method == 'GET':
-        course_id = request.query_params.get('course')
-        if not course_id:
+        course = request.query_params.get('course')
+        if not course:
             return Response({'detail': 'Course ID is required'}, status=400)
 
         try:
-            course = Course.objects.get(pk=course_id)
+            course = Course.objects.get(pk=course)
         except Course.DoesNotExist:
             return Response({'detail': 'Course not found'}, status=404)
 
-        is_teacher = request.user.role == 'teacher' and request.user == course.teacher
-        is_admin = request.user.role == 'admin'
+        is_teacher = request.user.is_authenticated and request.user.role == 'teacher' and request.user == course.teacher
+        is_admin = request.user.is_authenticated and request.user.role == 'admin'
         is_enrolled = Enrollment.objects.filter(
-            student=request.user, 
-            course=course, 
+            student=request.user,
+            course=course,
             status='active'
-        ).exists() if request.user.role == 'student' else False
+        ).exists() if request.user.is_authenticated and request.user.role == 'student' else False
 
         if not (is_teacher or is_admin or is_enrolled):
             return Response({'detail': 'You do not have permission to view these lessons'}, status=403)
@@ -149,12 +147,12 @@ def lesson_list_create(request):
         return Response(serializer.data)
 
     elif request.method == 'POST':
-        if request.user.role != 'teacher':
+        if not request.user.is_authenticated or request.user.role != 'teacher':
             return Response({'detail': 'Only teachers can create lessons'}, status=403)
 
-        course_id = request.data.get('course')
+        course = request.data.get('course')
         try:
-            course = Course.objects.get(pk=course_id)
+            course = Course.objects.get(pk=course)
         except Course.DoesNotExist:
             return Response({'detail': 'Course not found'}, status=404)
 
@@ -177,13 +175,13 @@ def lesson_detail(request, pk):
 
     if request.method == 'GET':
         course = lesson.course
-        is_teacher = request.user.role == 'teacher' and request.user == course.teacher
-        is_admin = request.user.role == 'admin'
+        is_teacher = request.user.is_authenticated and request.user.role == 'teacher' and request.user == course.teacher
+        is_admin = request.user.is_authenticated and request.user.role == 'admin'
         is_enrolled = Enrollment.objects.filter(
-            student=request.user, 
-            course=course, 
+            student=request.user,
+            course=course,
             status='active'
-        ).exists() if request.user.role == 'student' else False
+        ).exists() if request.user.is_authenticated and request.user.role == 'student' else False
 
         if not (is_teacher or is_admin or is_enrolled):
             return Response({'detail': 'You do not have permission to view this lesson'}, status=403)
@@ -192,7 +190,7 @@ def lesson_detail(request, pk):
         return Response(serializer.data)
 
     elif request.method == 'PUT':
-        if request.user.role != 'teacher' or request.user != lesson.course.teacher:
+        if not request.user.is_authenticated or request.user.role != 'teacher' or request.user != lesson.course.teacher:
             return Response({'detail': 'Only the course owner can update this lesson'}, status=403)
 
         serializer = LessonSerializer(lesson, data=request.data)
@@ -202,12 +200,12 @@ def lesson_detail(request, pk):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'DELETE':
-        if request.user.role != 'teacher' or request.user != lesson.course.teacher:
+        if not request.user.is_authenticated or request.user.role != 'teacher' or request.user != lesson.course.teacher:
             return Response({'detail': 'Only the course owner can delete this lesson'}, status=403)
 
         lesson.delete()
         return Response({'detail': 'Lesson deleted'}, status=status.HTTP_204_NO_CONTENT)
-
+    
 # ==================== MATERIALS ====================
 
 @swagger_auto_schema(method='post', request_body=MaterialSerializer)
@@ -215,12 +213,12 @@ def lesson_detail(request, pk):
 @permission_classes([IsAuthenticated])
 def material_list_create(request):
     if request.method == 'GET':
-        lesson_id = request.query_params.get('lesson')
-        if not lesson_id:
+        lesson = request.query_params.get('lesson')
+        if not lesson:
             return Response({'detail': 'Lesson ID is required'}, status=400)
 
         try:
-            lesson = Lesson.objects.get(pk=lesson_id)
+            lesson = Lesson.objects.get(pk=lesson)
         except Lesson.DoesNotExist:
             return Response({'detail': 'Lesson not found'}, status=404)
 
@@ -244,9 +242,9 @@ def material_list_create(request):
         if request.user.role != 'teacher':
             return Response({'detail': 'Only teachers can upload materials'}, status=403)
 
-        lesson_id = request.data.get('lesson')
+        lesson = request.data.get('lesson')
         try:
-            lesson = Lesson.objects.get(pk=lesson_id)
+            lesson = Lesson.objects.get(pk=lesson)
         except Lesson.DoesNotExist:
             return Response({'detail': 'Lesson not found'}, status=404)
 
@@ -308,12 +306,12 @@ def material_detail(request, pk):
 @permission_classes([IsAuthenticated])
 def enrollment_list(request):
     if request.user.role == 'teacher':
-        course_id = request.query_params.get('course')
-        if not course_id:
+        course = request.query_params.get('course')
+        if not course:
             return Response({'detail': 'Course ID is required'}, status=400)
 
         try:
-            course = Course.objects.get(pk=course_id)
+            course = Course.objects.get(pk=course)
         except Course.DoesNotExist:
             return Response({'detail': 'Course not found'}, status=404)
 
@@ -330,15 +328,15 @@ def enrollment_list(request):
         return Response(serializer.data)
 
     elif request.user.role == 'admin':
-        course_id = request.query_params.get('course')
-        student_id = request.query_params.get('student')
+        course = request.query_params.get('course')
+        student = request.query_params.get('student')
 
         queryset = Enrollment.objects.all()
 
-        if course_id:
-            queryset = queryset.filter(course__id=course_id)
-        if student_id:
-            queryset = queryset.filter(student__id=student_id)
+        if course:
+            queryset = queryset.filter(course__id=course)
+        if student:
+            queryset = queryset.filter(student__id=student)
 
         serializer = EnrollmentSerializer(queryset, many=True)
         return Response(serializer.data)
@@ -352,11 +350,11 @@ def enroll_course(request):
     if request.user.role != 'student':
         return Response({'detail': 'Only students can enroll in courses'}, status=403)
 
-    course_id = request.data.get('course')
+    course = request.data.get('course')
     payment_method = request.data.get('payment_method', 'free')
 
     try:
-        course = Course.objects.get(pk=course_id)
+        course = Course.objects.get(pk=course)
     except Course.DoesNotExist:
         return Response({'detail': 'Course not found'}, status=404)
 
@@ -379,14 +377,14 @@ def enroll_course(request):
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def question_list_create(request):
-    lesson_id = request.query_params.get('lesson')
+    lesson = request.query_params.get('lesson')
 
     if request.method == 'GET':
-        if not lesson_id:
+        if not lesson:
             return Response({'detail': 'Lesson ID is required'}, status=400)
 
         try:
-            lesson = Lesson.objects.get(pk=lesson_id)
+            lesson = Lesson.objects.get(pk=lesson)
         except Lesson.DoesNotExist:
             return Response({'detail': 'Lesson not found'}, status=404)
 
@@ -410,9 +408,9 @@ def question_list_create(request):
         if request.user.role != 'student':
             return Response({'detail': 'Only students can ask questions'}, status=403)
 
-        lesson_id = request.data.get('lesson')
+        lesson = request.data.get('lesson')
         try:
-            lesson = Lesson.objects.get(pk=lesson_id)
+            lesson = Lesson.objects.get(pk=lesson)
         except Lesson.DoesNotExist:
             return Response({'detail': 'Lesson not found'}, status=404)
 

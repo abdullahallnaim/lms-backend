@@ -18,8 +18,8 @@ class Course(models.Model):
     price = models.FloatField()
     duration = models.FloatField()
     is_active = models.BooleanField()
-    category_id = models.ForeignKey(Category, on_delete=models.CASCADE)
-    instructor_id = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role' : 'teacher'})
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    instructor = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role' : 'teacher'})
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -30,7 +30,7 @@ class Lesson(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
     video = models.FileField(upload_to='lesson_videoes')
-    course_id = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -43,7 +43,7 @@ class Material(models.Model):
     description = models.TextField()
     file_type= models.CharField(max_length=100)
     file = models.FileField(upload_to='materials/')
-    course_id = models.ForeignKey(Course, on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -52,8 +52,8 @@ class Material(models.Model):
         return self.title
 
 class Enrollment(models.Model):
-    student_id = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role' : 'student'})
-    course_id = models.ForeignKey(Course, on_delete=models.CASCADE)
+    student = models.ForeignKey(User, on_delete=models.CASCADE, limit_choices_to={'role' : 'student'})
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
     is_active = models.BooleanField(default=True)
     price = models.FloatField()
     progress = models.IntegerField(default=0)
@@ -64,16 +64,16 @@ class Enrollment(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.student_id.username} - {self.course_id.title}"
+        return f"{self.student.username} - {self.course.title}"
 
 class QuestionAnswer(models.Model):
-    user_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    lesson_id = models.ForeignKey(Lesson, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
     description = models.TextField()
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.user_id.username} --> {self.lesson_id.title} --> {self.description}"
+        return f"{self.user.username} --> {self.lesson.title} --> {self.description}"
     
