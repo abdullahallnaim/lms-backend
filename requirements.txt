@@ -94,4 +94,4 @@ virtualenv
 wcwidth
 Werkzeug
 wheel
-corsheaders
+django-cors-headers
