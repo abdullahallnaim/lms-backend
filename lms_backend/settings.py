@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-kc!noqi&_!5z@=7(8&_=%)i%bma&!=v@4l4i+71&8qd*2tw=a^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -43,7 +43,10 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'users',
     'core',
+    'corsheaders',
 ]
+CORS_ALLOW_ALL_ORIGINS = True
+
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
         'Bearer': {
@@ -62,6 +65,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
