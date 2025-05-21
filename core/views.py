@@ -66,8 +66,8 @@ def course_list_create(request):
         return paginator.get_paginated_response(serializer.data)
 
     elif request.method == 'POST':
-        # if not request.user.is_authenticated or request.user.role != 'teacher':
-        #     return Response({'detail': 'Only teachers can create courses.'}, status=403)
+        if not request.user.is_authenticated or request.user.role != 'teacher':
+            return Response({'detail': 'Only teachers can create courses.'}, status=403)
 
         serializer = CourseSerializer(data=request.data)
         if serializer.is_valid():
