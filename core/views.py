@@ -15,7 +15,6 @@ from drf_yasg.utils import swagger_auto_schema
 
 @swagger_auto_schema(method='post', request_body=CategorySerializer)
 @api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
 def category_list_create(request):
     if request.method == 'GET':
         categories = Category.objects.all()
@@ -36,7 +35,6 @@ def category_list_create(request):
 
 @swagger_auto_schema(method='post', request_body=CourseSerializer)
 @api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
 def course_list_create(request):
     if request.method == 'GET':
         category = request.query_params.get('category')
@@ -81,7 +79,6 @@ def course_list_create(request):
 
 @swagger_auto_schema(method='put', request_body=CourseSerializer)
 @api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([IsAuthenticated])
 def course_detail(request, pk):
     try:
         course = Course.objects.get(pk=pk)
@@ -125,7 +122,6 @@ def course_detail(request, pk):
 
 @swagger_auto_schema(method='post', request_body=LessonSerializer)
 @api_view(['GET', 'POST'])
-@permission_classes([IsAuthenticated])
 def lesson_list_create(request):
     if request.method == 'GET':
         course_id = request.query_params.get('course')
@@ -173,7 +169,6 @@ def lesson_list_create(request):
 
 @swagger_auto_schema(method='put', request_body=LessonSerializer)
 @api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([IsAuthenticated])
 def lesson_detail(request, pk):
     try:
         lesson = Lesson.objects.get(pk=pk)
