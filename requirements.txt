@@ -94,3 +94,4 @@ urllib3
 virtualenv
 wcwidth
 Werkzeug
+pywin32
