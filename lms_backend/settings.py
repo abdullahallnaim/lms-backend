@@ -27,7 +27,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = ['https://smart-care.onrender.com','https://*.127.0.0.1']
 
 # Application definition
 
@@ -46,6 +45,9 @@ INSTALLED_APPS = [
     'core',
     'corsheaders',
 ]
+
+CSRF_TRUSTED_ORIGINS = ['https://lms-backend-xpwc.onrender.com']
+
 CORS_ALLOW_ALL_ORIGINS = True
 
 SWAGGER_SETTINGS = {
